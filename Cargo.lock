@@ -6,6 +6,7 @@ version = 3
 name = "AlgoTrade"
 version = "0.1.0"
 dependencies = [
+ "IBApiHandler",
  "ibapi",
 ]
 
@@ -14,6 +15,7 @@ name = "IBApiHandler"
 version = "0.1.0"
 dependencies = [
  "ibapi",
+ "time",
 ]
 
 [[package]]

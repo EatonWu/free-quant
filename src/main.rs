@@ -1,23 +1,27 @@
 use ibapi::client::Client;
 use ibapi::contracts::Contract;
 use ibapi::orders::{order_builder, Action, OrderNotification};
+use IBApiHandler::ibapi_handler;
 
 fn main() {
-    let client = Client::connect("127.0.0.1:7497", 100);
-    let res_client;
+    let client = ibapi_handler::connect_to_tws();
     match client {
-        Ok(mut c) => {
-            println!("Connected to TWS");
-            res_client = c;
-        },
-        Err(e) => {
-            println!("Error: {:?}", e);
-            return;
-        }
+        Ok(_) => { println!("Connected to TWS") },
+        Err(e) => { println!("Error: {:?}", e); return }
     }
 
+    // attempt to retrieve historical data
+    let mut client = client.unwrap();
+    let contract = Contract::stock("AAPL");
+    let data = ibapi_handler::get_historical_data(&mut client, contract, 30);
+    match data {
+        Ok(_) => { println!("Historical data retrieved") },
+        Err(e) => { println!("Error: {:?}", e); return }
+    }
 
+    let data = data.unwrap();
 
-
-
+    for bar in &data.bars {
+        println!("Bar: {:?}", bar);
+    }
 }
