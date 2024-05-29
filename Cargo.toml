@@ -1,4 +1,4 @@
-workspace = { members = ["IBApiHandler"] }
+workspace = { members = [ "RangeDataStorage","IBApiHandler"] }
 [package]
 name = "AlgoTrade"
 version = "0.1.0"

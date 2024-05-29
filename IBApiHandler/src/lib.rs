@@ -21,10 +21,15 @@ pub mod ibapi_handler {
         }
     }
 
-    /// gathers historical data
+    /// Given a `client` and a `contract`, retrieves historical data for the contract
+    /// for the last `days` days.
     pub fn get_historical_data(client: &mut Client, contract: Contract, days: i32) -> Result<HistoricalData, Box<dyn std::error::Error>> {
         // create OffsetDateTime object for last 30 days
         let duration = Duration::days(days);
+
+        // check cache if it has data
+
+
         let data = client.historical_data_ending_now(&contract, duration,
             BarSize::Day, WhatToShow::Trades, false);
         return match data {
