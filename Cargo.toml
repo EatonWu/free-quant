@@ -9,3 +9,4 @@ edition = "2021"
 [dependencies]
 ibapi = "0.4.2"
 IBApiHandler = {path = "./IBApiHandler"}
+RangeDataStorage = {path = "./RangeDataStorage"}

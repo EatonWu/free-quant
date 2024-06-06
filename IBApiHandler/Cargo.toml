@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 ibapi = "0.4.2"
-time = "0.3.36"
+time = { version = "0.3.36", features = ["serde"]}
+serde = { version = "1.0.202", features = ["derive"] }
+RangeDataStorage = { path = "../RangeDataStorage" }

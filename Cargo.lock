@@ -7,6 +7,7 @@ name = "AlgoTrade"
 version = "0.1.0"
 dependencies = [
  "IBApiHandler",
+ "RangeDataStorage",
  "ibapi",
 ]
 
@@ -14,7 +15,9 @@ dependencies = [
 name = "IBApiHandler"
 version = "0.1.0"
 dependencies = [
+ "RangeDataStorage",
  "ibapi",
+ "serde",
  "time",
 ]
 
@@ -23,6 +26,7 @@ name = "RangeDataStorage"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "time",
 ]
 
@@ -110,6 +114,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4"
 dependencies = [
  "powerfmt",
+ "serde",
 ]
 
 [[package]]
@@ -280,6 +285,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
 
 [[package]]
+name = "ryu"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
+
+[[package]]
 name = "serde"
 version = "1.0.202"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -309,6 +320,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.117"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "455182ea6142b14f93f4bc5320a2b31c1f266b66a4a5c858b013302a5d8cbfc3"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]

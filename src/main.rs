@@ -6,6 +6,7 @@ use ibapi::contracts::Contract;
 // use ibapi::market_data::historical::Duration;
 use ibapi::orders::{order_builder, Action, OrderNotification};
 use IBApiHandler::ibapi_handler;
+use RangeDataStorage::range_data_storage::RangeDataStore;
 
 fn main() {
     let client = ibapi_handler::connect_to_tws();
@@ -28,4 +29,11 @@ fn main() {
     for bar in &data.bars {
         println!("Bar: {:?}", bar);
     }
+
+    // collect bars
+    let bars = data.bars.clone();
+
+    // let mut data_store = RangeDataStore::new("@data".to_string(), "int_test".to_string());
+    // data_store.add_range(bars)
+    // data_store.save_to_file("@data", "int_test");
 }

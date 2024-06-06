@@ -4,7 +4,7 @@ mod all_tests {
 
         #[test]
         fn test_range_add() {
-            let mut storage = RangeDataStore::new();
+            let mut storage = RangeDataStore::new("@data".to_string(),"int_test".to_string());
             storage.add_range(vec![1, 2, 3]);
             assert_eq!(storage.len(), 1);
             assert_eq!(storage.total_len(), 3);
@@ -12,7 +12,7 @@ mod all_tests {
 
         #[test]
         fn test_range_add_overlap() {
-            let mut storage = RangeDataStore::new();
+            let mut storage = RangeDataStore::new("@data".to_string(),"int_test".to_string());
             storage.add_range(vec![1, 2, 3]);
             storage.add_range(vec![3, 4, 5]);
             assert_eq!(storage.len(), 1);
@@ -21,7 +21,7 @@ mod all_tests {
 
         #[test]
         fn test_range_add_no_overlap() {
-            let mut storage = RangeDataStore::new();
+            let mut storage = RangeDataStore::new("@data".to_string(),"int_test".to_string());
             storage.add_range(vec![1, 2, 3]);
             storage.add_range(vec![4, 5, 6]);
             assert_eq!(storage.len(), 2);
@@ -34,26 +34,26 @@ mod all_tests {
 
         #[test]
         fn test_range_add() {
-            let mut storage = RangeDataStore::new();
-            storage.add_range(vec!["a", "b", "c"]);
+            let mut storage = RangeDataStore::new("@data".to_string(), "string_test".to_string());
+            storage.add_range(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
             assert_eq!(storage.len(), 1);
             assert_eq!(storage.total_len(), 3);
         }
 
         #[test]
         fn test_range_add_overlap() {
-            let mut storage = RangeDataStore::new();
-            storage.add_range(vec!["a", "b", "c"]);
-            storage.add_range(vec!["c", "d", "e"]);
+            let mut storage = RangeDataStore::new("@data".to_string(), "string_test".to_string());
+            storage.add_range(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+            storage.add_range(vec!["c".to_string(), "d".to_string(), "e".to_string()]);
             assert_eq!(storage.len(), 1);
             assert_eq!(storage.total_len(), 5);
         }
 
         #[test]
         fn test_range_add_no_overlap() {
-            let mut storage = RangeDataStore::new();
-            storage.add_range(vec!["a", "b", "c"]);
-            storage.add_range(vec!["d", "e", "f"]);
+            let mut storage = RangeDataStore::new("@data".to_string(), "string_test".to_string());
+            storage.add_range(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+            storage.add_range(vec!["d".to_string(), "e".to_string(), "f".to_string()]);
             assert_eq!(storage.len(), 2);
             assert_eq!(storage.total_len(), 6);
         }
@@ -65,7 +65,7 @@ mod all_tests {
 
         #[test]
         fn test_range_add() {
-            let mut storage = RangeDataStore::new();
+            let mut storage = RangeDataStore::new("@data".to_string(), "offset_datetime_test".to_string());
             storage.add_range(vec![OffsetDateTime::now_utc()]);
             assert_eq!(storage.len(), 1);
             assert_eq!(storage.total_len(), 1);
@@ -73,7 +73,7 @@ mod all_tests {
 
         #[test]
         fn test_range_add_overlap() {
-            let mut storage = RangeDataStore::new();
+            let mut storage = RangeDataStore::new("@data".to_string(), "offset_datetime_test".to_string());
             let current_time = OffsetDateTime::now_utc();
             storage.add_range(vec![current_time]);
             storage.add_range(vec![current_time]);

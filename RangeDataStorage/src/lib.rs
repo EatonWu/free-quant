@@ -4,6 +4,8 @@ pub mod range_data_storage {
     use serde::{Deserialize, Serialize};
     use serde;
     use std::hash::Hash;
+    use std::io::Write;
+    use serde::de::DeserializeOwned;
 
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct RangeDataEntry<T> where T: PartialEq {
@@ -14,7 +16,7 @@ pub mod range_data_storage {
 
     impl<T> RangeDataEntry<T>
         where T: Ord + PartialEq + Clone {
-        fn new(start: T, end: T, data: Vec<T>) -> Self {
+        pub fn new(start: T, end: T, data: Vec<T>) -> Self {
             assert!(start <= end, "Start must be less than or equal to end");
             RangeDataEntry { start, end, data }
         }
@@ -36,15 +38,29 @@ pub mod range_data_storage {
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct RangeDataStore<T: PartialEq + Clone + Ord> {
+        directory: String,
+        file_name: String,
         entries: BTreeMap<T, RangeDataEntry<T>>
     }
 
     /// User should be able to ask RangeDataStorage if:
     /// - A range already exists in the storage
-    ///
-    impl<T> RangeDataStore<T> where T: Ord + Clone + Hash {
-        pub fn new() -> Self {
+    impl<T> RangeDataStore<T> where T: Ord + Clone + Hash + Serialize + DeserializeOwned {
+        pub fn new(directory: String, file_name: String) -> Self {
+            if !std::path::Path::new(&directory).exists() {
+                std::fs::create_dir(&directory).unwrap();
+            }
+
+            let file_path = format!("{}/{}", directory, file_name);
+
+            if std::path::Path::new(&file_path).exists() {
+                println!("Loading from file");
+                return Self::load_from_file(&directory, &file_name);
+            }
+
             RangeDataStore {
+                directory,
+                file_name,
                 entries: BTreeMap::new(),
             }
         }
@@ -84,6 +100,10 @@ pub mod range_data_storage {
             self.entries.insert(new_start.clone(), RangeDataEntry::new(new_start, new_end, new_data));
         }
 
+        pub fn add_range_entry(&mut self, entry: RangeDataEntry<T>) {
+            self.add_range(entry.data.clone());
+        }
+
         // Check if a range is contained within any of the stored ranges
         fn contains(&self, start: &T, end: &T) -> bool {
             // iterate over each range entry in the storage, could maybe be a binary search(?)
@@ -101,6 +121,32 @@ pub mod range_data_storage {
 
         pub fn total_len(&self) -> usize {
             self.entries.iter().fold(0, |acc, (_, entry)| acc + entry.data.len())
+        }
+
+        pub fn load_from_file(directory: &str, file_name: &str) -> Self {
+            let file_path = format!("{}/{}", directory, file_name);
+            let file = std::fs::File::open(file_path).unwrap();
+            let reader = std::io::BufReader::new(file);
+            let data= serde_json::from_reader(reader);
+            match data {
+                Ok(data) => {
+                    data
+                },
+                Err(e) => {
+                    println!("Error: {:?}", e);
+                    RangeDataStore {
+                        directory: directory.to_string(),
+                        file_name: file_name.to_string(),
+                        entries: BTreeMap::new(),
+                    }
+                }
+            }
+        }
+
+        pub fn save_to_file(&self, directory: &str, file_name: &str) {
+            let json = serde_json::to_string_pretty(&self).unwrap();
+            let mut file = std::fs::File::create(format!("{}/{}", directory, file_name)).unwrap();
+            file.write_all(json.as_bytes()).unwrap();
         }
     }
 }
