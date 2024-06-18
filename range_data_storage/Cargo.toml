@@ -1,5 +1,5 @@
 [package]
-name = "RangeDataStorage"
+name = "range_data_storage"
 version = "0.1.0"
 edition = "2021"
 
