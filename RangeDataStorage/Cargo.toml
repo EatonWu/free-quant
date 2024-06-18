@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { version="1.0.202", features=["derive"] }
+serde = { version="1.0.202", features=["serde_derive"] }
 time = { version = "0.3.36" , features=["serde"]}
 serde_json = "1.0.117"
-
+rangemap = { version="1.5.1" , features=["serde1"] }
