@@ -1,6 +1,7 @@
 pub mod range_data_storage {
     use std::error::Error;
     use std::fmt::Debug;
+    use std::io::Write;
     use serde::{Deserialize, Serialize};
     use serde;
     use std::path::Path;
@@ -58,11 +59,20 @@ pub mod range_data_storage {
 
         pub fn save(&mut self, location: String) {
             let file = std::fs::File::create(location).unwrap();
-            let writer = std::io::BufWriter::new(file);
-            let res = serde_json::to_writer(writer, self);
+            let mut writer = std::io::BufWriter::new(file);
+            // convert self to pretty json and write to file
+            let res = serde_json::to_string_pretty(self);
             match res {
-                Ok(_) => {},
-                Err(e) => { println!("Error while saving file : {:?}", e); }
+                Ok(data) => {
+                    let res = writer.write_all(data.as_bytes());
+                    match res {
+                        Ok(_) => {},
+                        Err(e) => { println!("Error while saving file : {:?}", e); }
+                    }
+                },
+                Err(e) => {
+                    println!("Error while saving file : {:?}", e);
+                }
             }
         }
 

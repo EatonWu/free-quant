@@ -27,6 +27,7 @@ fn main() {
 
     for bar in &data.bars {
         println!("Bar: {:?}", bar);
+        bar.date.unix_timestamp()
     }
 
     // collect bars
