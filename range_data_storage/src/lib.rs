@@ -76,6 +76,14 @@ pub mod range_data_storage {
             }
         }
 
+        pub fn contains(&mut self, key: K) -> bool {
+            self.range_map.contains_key(&key)
+        }
+
+        pub fn contains_range(&mut self, key_start: K, key_end: K) -> bool {
+            self.range_map.contains_key(&key_start) && self.range_map.contains_key(&key_end)
+        }
+
         pub fn get(&self, key: K) -> Option<&V> {
             self.range_map.get(&key)
         }
@@ -85,7 +93,7 @@ pub mod range_data_storage {
         K: Ord + Clone + Eq + Serialize + DeserializeOwned + StepLite,
         V: Serialize+ Eq + Clone + DeserializeOwned {
         fn drop(&mut self) {
-            self.save("data.json".to_string());
+            self.save("@data/data.json".to_string());
         }
     }
 }

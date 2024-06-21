@@ -1,6 +1,5 @@
 mod ibapi_tests {
     use range_data_storage::range_data_storage::RangeDataStorage;
-    use chrono::{Duration, NaiveDate};
     use time::OffsetDateTime;
 
     // range data storage test
