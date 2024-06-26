@@ -1,6 +1,6 @@
 use ibapi::contracts::Contract;
 use ibapi::market_data::historical::BarSize;
-use ibapi_handler; // ambiguous name
+use ibapi_handler;
 use range_data_storage::range_data_storage::RangeDataStorage;
 
 fn main() {
