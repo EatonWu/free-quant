@@ -44,7 +44,7 @@ In this case, our 'strategy' struct would contain a vector of conditions.
 ### Conditions
 
 Generally, a strategy checks to see if some value is above or below some threshold, which we'll refer to as a condition or a signal.
-(e.g. 50-SMA > 200-SMA)
+(e.g. 50-SMA > 200-SMA) However, there can be buy signals and sell signals, so we need to differentiate between them. 
 
 ### Context
 
