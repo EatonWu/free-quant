@@ -1,4 +1,4 @@
-workspace = { members = [ "range_data_storage","ibapi_handler", "backtesting"] }
+workspace = { members = [ "range_data_storage","ibapi_handler", "backtesting", "fq_data_broker"] }
 [package]
 name = "AlgoTrade"
 version = "0.1.0"

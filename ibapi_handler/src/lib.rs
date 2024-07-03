@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use ibapi::client::Client;
 use ibapi::contracts::Contract;
 use ibapi::market_data::historical::{BarSize, HistoricalData, WhatToShow};

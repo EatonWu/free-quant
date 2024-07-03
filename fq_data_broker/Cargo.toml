@@ -1,5 +1,5 @@
 [package]
-name = "backtesting"
+name = "fq_data_broker"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,5 +8,3 @@ ibapi = "0.4.2"
 ibapi_handler = {path = "../ibapi_handler" }
 range_data_storage = {path = "../range_data_storage" }
 ordered-float = "4.2.0"
-derivative = "2.2.0"
-anyhow = "1.0.86"

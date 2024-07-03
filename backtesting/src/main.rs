@@ -1,16 +1,18 @@
 use std::collections::HashMap;
+use anyhow::Error;
+use ibapi::market_data::historical::BarSize;
 use ordered_float::OrderedFloat;
 use backtesting::*;
 
-fn buy_signal(context: &HashMap<Metric, OrderedFloat<f64>>) -> Result<bool, Box<dyn std::error::Error>> {
-    let sma_50 = context.get(&Metric::SMA(50)).ok_or("SMA 50 not found")?;
-    let sma_200 = context.get(&Metric::SMA(200)).ok_or("SMA 200 not found")?;
+fn buy_signal(context: &HashMap<Metric, OrderedFloat<f64>>) -> Result<bool, Error> {
+    let sma_50 = context.get(&Metric::SMA(50)).ok_or(Error::msg("SMA 50 not found"))?;
+    let sma_200 = context.get(&Metric::SMA(200)).ok_or(Error::msg("SMA 200 not found"))?;
     Ok(*sma_50 > *sma_200)
 }
 
-fn sell_signal(context: &HashMap<Metric, OrderedFloat<f64>>) -> Result<bool, Box<dyn std::error::Error>> {
-    let sma_50 = context.get(&Metric::SMA(50)).ok_or("SMA 50 not found")?;
-    let sma_200 = context.get(&Metric::SMA(200)).ok_or("SMA 200 not found")?;
+fn sell_signal(context: &HashMap<Metric, OrderedFloat<f64>>) -> Result<bool, Error> {
+    let sma_50 = context.get(&Metric::SMA(50)).ok_or(Error::msg("SMA 50 not found"))?;
+    let sma_200 = context.get(&Metric::SMA(200)).ok_or(Error::msg("SMA 200 not found"))?;
     Ok(*sma_50 < *sma_200)
 }
 
@@ -27,10 +29,29 @@ fn main() {
 
     let strategy = Strategy::new(
         context,
+        BarSize::Day,
         buy_signal,
         sell_signal,
-        || println!("Bought"),
-        || println!("Sold"),
+        || {println!("Bought"); Ok(())},
+        || {println!("Sold"); Ok(())},
     );
-    println!("Should buy: {}", strategy.should_buy());
+    if let Err(e) = strategy.should_buy() {
+        println!("Error while executing strategy : {:?}", e);
+    }
+    else {
+        let should_buy = strategy.should_buy().unwrap();
+        if should_buy {
+            println!("Buy signal is true");
+        }
+    }
+
+    if let Err(e) = strategy.should_sell() {
+        println!("Error while executing strategy : {:?}", e);
+    }
+    else {
+        let should_sell = strategy.should_sell().unwrap();
+        if should_sell {
+            println!("Sell signal is true");
+        }
+    }
 }
