@@ -58,6 +58,11 @@ pub mod range_data_storage {
         }
 
         pub fn save(&mut self, location: String) {
+            // create all parent directories
+            let path = Path::new(&location);
+            if !path.exists() {
+                std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            }
             let file = std::fs::File::create(location).unwrap();
             let mut writer = std::io::BufWriter::new(file);
             // convert self to pretty json and write to file
@@ -80,8 +85,9 @@ pub mod range_data_storage {
             self.range_map.contains_key(&key)
         }
 
-        pub fn contains_range(&mut self, key_start: K, key_end: K) -> bool {
-            self.range_map.contains_key(&key_start) && self.range_map.contains_key(&key_end)
+        pub fn contains_range(&self, key_start: &K, key_end: &K) -> bool {
+            let has_start_and_end = self.range_map.contains_key(&key_start) && self.range_map.contains_key(&key_end);
+            return has_start_and_end && self.range_map.get(&key_start) == self.range_map.get(&key_end);
         }
 
         pub fn get(&self, key: K) -> Option<&V> {

@@ -1,10 +1,13 @@
+use std::fmt::{Debug, Formatter};
 use std::hash::Hash;
 use ibapi::client::Client;
 use ibapi::contracts::Contract;
 use ibapi::market_data::historical::{BarSize, HistoricalData, WhatToShow};
-use ibapi::market_data::historical::Duration;
+use ibapi::market_data::historical::{Duration, ToDuration};
 use serde::{Deserialize, Serialize};
 use ordered_float::OrderedFloat;
+use anyhow::{Error, bail};
+use time::OffsetDateTime;
 
 // We use OrderedFloat to avoid dealing with RangeMap's Eq requirement
 // Hopefully this doesn't cause any issues
@@ -20,8 +23,37 @@ pub struct IBApiBar {
     wap: OrderedFloat<f64>,
 }
 
+pub struct IbapiHandler {
+    client: Client,
+}
 
-pub fn connect_to_tws() -> Result<Client, Box<dyn std::error::Error>> {
+impl IbapiHandler {
+    pub fn new() -> Result<IbapiHandler, Error> {
+        let client = connect_to_tws()?;
+        Ok(IbapiHandler {
+            client,
+        })
+    }
+
+    pub fn get_historical_data(&mut self, contract: &Contract, bar_size: BarSize, start_date: OffsetDateTime, end_date: OffsetDateTime) -> Result<Vec<IBApiBar>, Error> {
+        // calculate duration
+        let duration = end_date - start_date;
+        // convert seconds to ibapi duration
+        let duration = convert_durations(duration, bar_size);
+        let data = self.client.historical_data(
+            contract,
+            end_date,
+            duration,
+            bar_size,
+            WhatToShow::Trades,
+            true
+        )?;
+        let bars = convert_bar_vec_to_wrapper(data.bars);
+        Ok(bars)
+    }
+}
+
+pub fn connect_to_tws() -> Result<Client, Error> {
     let client = Client::connect("127.0.0.1:7497", 100);
     return match client {
         Ok(c) => {
@@ -30,32 +62,68 @@ pub fn connect_to_tws() -> Result<Client, Box<dyn std::error::Error>> {
         },
         Err(e) => {
             println!("Error: {:?}", e);
-            Err(Box::new(e))
+            bail!(e)
         }
     }
 }
 
-/// Given a `client` and a `contract`, retrieves historical data for the contract
-/// for the last `days` days.
-pub fn get_historical_data(client: &mut Client, contract: Contract, days: i32, bar_size: BarSize) -> Result<HistoricalData, Box<dyn std::error::Error>> {
-    // create OffsetDateTime object for last 30 days
-    let duration = Duration::days(days);
+/// takes a time duration and converts it into a ibapi duration
+pub fn convert_durations(duration: time::Duration, bar_size: BarSize) -> Duration{
 
-    // check cache if it has data
-    let data = client.historical_data_ending_now(&contract, duration,
-        bar_size, WhatToShow::Trades, false);
-    return match data {
-        Ok(d) => {
-            Ok(d)
+    let seconds = duration.whole_seconds() as i32;
+    println!("Seconds: {:?}", seconds);
+    return match bar_size {
+        BarSize::Sec => Duration::seconds(seconds),
+        BarSize::Sec5 => Duration::seconds(seconds),
+        BarSize::Sec15 => Duration::seconds(seconds),
+        BarSize::Sec30 => Duration::seconds(seconds),
+        BarSize::Min => Duration::seconds(seconds),
+        BarSize::Min2 => Duration::seconds(seconds),
+        BarSize::Min3 => Duration::seconds(seconds),
+        BarSize::Min5 => Duration::seconds(seconds),
+        BarSize::Min15 => Duration::seconds(seconds),
+        BarSize::Min20 => Duration::seconds(seconds),
+        BarSize::Min30 => Duration::seconds(seconds),
+        BarSize::Hour => Duration::seconds(seconds),
+        BarSize::Hour2 => Duration::seconds(seconds),
+        BarSize::Hour3 => Duration::seconds(seconds),
+        BarSize::Hour4 => Duration::seconds(seconds),
+        BarSize::Hour8 => Duration::seconds(seconds),
+        BarSize::Day => {
+            let days = seconds / 86400;
+            if days > 365 {
+                Duration::years(seconds / 31536000)
+            }
+            else {
+                Duration::days(seconds / 86400)
+            }
         },
-        Err(e) => {
-            println!("Error: {:?}", e);
-            Err(Box::new(e))
-        }
-    }
+        BarSize::Week => Duration::weeks(seconds / 604800),
+        BarSize::Month => Duration::months(seconds / 2592000),
+    };
 }
 
-pub fn convert_from_ibapi_bar_historical(bars: ibapi::market_data::historical::Bar)
+// /// Given a `client` and a `contract`, retrieves historical data for the contract
+// /// for the last `days` days.
+// fn get_historical_data_from_days(client: &mut Client, contract: Contract, days: i32, bar_size: BarSize) -> Result<HistoricalData, Error> {
+//     // create OffsetDateTime object for last 30 days
+//     let duration = Duration::days(days);
+//
+//     // check cache if it has data
+//     let data = client.historical_data_ending_now(&contract, duration,
+//         bar_size, WhatToShow::Trades, false);
+//     return match data {
+//         Ok(d) => {
+//             Ok(d)
+//         },
+//         Err(e) => {
+//             println!("Error: {:?}", e);
+//             bail!(e)
+//         }
+//     }
+// }
+
+fn convert_from_ibapi_bar_historical(bars: ibapi::market_data::historical::Bar)
         -> IBApiBar {
     IBApiBar {
         date: bars.date.unix_timestamp(),
@@ -69,11 +137,14 @@ pub fn convert_from_ibapi_bar_historical(bars: ibapi::market_data::historical::B
     }
 }
 
-pub fn convert_bar_vec_to_wrapper(bars: Vec<ibapi::market_data::historical::Bar>)
-        -> Vec<IBApiBar> {
+fn convert_bar_vec_to_wrapper(bars: Vec<ibapi::market_data::historical::Bar>) -> Vec<IBApiBar> {
     let mut wrappers = Vec::new();
     for bar in bars {
         wrappers.push(convert_from_ibapi_bar_historical(bar));
     }
     wrappers
+}
+
+impl IBApiBar {
+
 }
