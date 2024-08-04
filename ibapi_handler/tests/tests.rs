@@ -33,7 +33,7 @@ mod ibapi_tests {
         drop(range_store);
 
         let range_store = RangeDataStorage::new(Some("data.json".to_string()));
-        let mut range_store = range_store.unwrap();
+        let range_store = range_store.unwrap();
         assert_eq!(range_store.get(today_timestamp), Some(&3));
         assert_eq!(range_store.get(tomorrow_timestamp), Some(&3));
     }
@@ -43,7 +43,6 @@ mod ibapi_tests {
 mod handler_tests {
     use ibapi::contracts::Contract;
     use ibapi::market_data::historical::BarSize;
-    use time::macros::datetime;
     use time::Month;
     use ibapi_handler::IbapiHandler;
 

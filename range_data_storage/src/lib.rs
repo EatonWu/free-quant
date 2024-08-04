@@ -1,5 +1,4 @@
 pub mod range_data_storage {
-    use std::error::Error;
     use std::fmt::Debug;
     use std::io::Write;
     use serde::{Deserialize, Serialize};
@@ -7,6 +6,7 @@ pub mod range_data_storage {
     use std::path::Path;
     use rangemap::{RangeInclusiveMap, StepLite};
     use serde::de::DeserializeOwned;
+    use anyhow::{bail, Error};
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct RangeDataStorage<K, V> where
@@ -24,7 +24,7 @@ pub mod range_data_storage {
             K: Ord + Clone + Eq + Serialize + DeserializeOwned + StepLite,
             V: Serialize + Eq + Clone + DeserializeOwned {
 
-        pub fn new(location: Option<String>) -> Result<RangeDataStorage<K, V>, Box<dyn Error>> {
+        pub fn new(location: Option<String>) -> Result<RangeDataStorage<K, V>, Error> {
             if location.is_some() {
                 // load from file
                 let location = location.unwrap();
@@ -57,13 +57,27 @@ pub mod range_data_storage {
             self.range_map.insert(range, value);
         }
 
-        pub fn save(&mut self, location: String) {
+
+        pub fn save(&mut self, location: String) -> Result<(), Error>{
             // create all parent directories
             let path = Path::new(&location);
             if !path.exists() {
-                std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+                let parent = path.parent();
+                if parent.is_none() {
+                    bail!("Parent directory does not exist");
+                }
+                let parent = parent.unwrap();
+                let res = std::fs::create_dir_all(parent);
+                match res {
+                    Ok(_) => {},
+                    Err(e) => { bail!(e)}
+                }
             }
-            let file = std::fs::File::create(location).unwrap();
+            let file = std::fs::File::create(location);
+            if file.is_err() {
+                bail!("Error creating file");
+            }
+            let file = file.unwrap();
             let mut writer = std::io::BufWriter::new(file);
             // convert self to pretty json and write to file
             let res = serde_json::to_string_pretty(self);
@@ -71,12 +85,12 @@ pub mod range_data_storage {
                 Ok(data) => {
                     let res = writer.write_all(data.as_bytes());
                     match res {
-                        Ok(_) => {},
-                        Err(e) => { println!("Error while saving file : {:?}", e); }
+                        Ok(_) => Ok(()),
+                        Err(e) => { bail!(e)}
                     }
                 },
                 Err(e) => {
-                    println!("Error while saving file : {:?}", e);
+                    bail!(e)
                 }
             }
         }
@@ -99,7 +113,10 @@ pub mod range_data_storage {
         K: Ord + Clone + Eq + Serialize + DeserializeOwned + StepLite,
         V: Serialize+ Eq + Clone + DeserializeOwned {
         fn drop(&mut self) {
-            self.save("@data/data.json".to_string());
+            match self.save("@data/data.json".to_string()) {
+                Ok(_) => {},
+                Err(e) => {println!("Error while dropping RangeDataStorage: {:?}", e)}
+            }
         }
     }
 }

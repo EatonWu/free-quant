@@ -1,9 +1,8 @@
-use std::fmt::{Debug, Formatter};
-use std::hash::Hash;
+use std::fmt::{Debug};
 use ibapi::client::Client;
 use ibapi::contracts::Contract;
-use ibapi::market_data::historical::{BarSize, HistoricalData, WhatToShow};
-use ibapi::market_data::historical::{Duration, ToDuration};
+use ibapi::market_data::historical::{BarSize, WhatToShow};
+use ibapi::market_data::historical::{Duration};
 use serde::{Deserialize, Serialize};
 use ordered_float::OrderedFloat;
 use anyhow::{Error, bail};
@@ -35,7 +34,7 @@ impl IbapiHandler {
         })
     }
 
-    pub fn get_historical_data(&mut self, contract: &Contract, bar_size: BarSize, start_date: OffsetDateTime, end_date: OffsetDateTime) -> Result<Vec<IBApiBar>, Error> {
+    pub fn get_historical_data(&self, contract: &Contract, bar_size: BarSize, start_date: OffsetDateTime, end_date: OffsetDateTime) -> Result<Vec<IBApiBar>, Error> {
         // calculate duration
         let duration = end_date - start_date;
         // convert seconds to ibapi duration
