@@ -13,6 +13,20 @@ mod all_tests {
         }
 
         #[test]
+        pub fn insert_two_test() {
+            let range_store = RangeDataStorage::new(None);
+            let mut range_store = range_store.unwrap();
+            range_store.insert(1, 3, 3);
+            range_store.insert(5, 6, 6);
+            assert_eq!(range_store.get(1), Some(&3));
+            assert_eq!(range_store.get(2), Some(&3));
+            assert_eq!(range_store.get(3), Some(&3));
+            assert_eq!(range_store.get(5), Some(&6));
+            assert_eq!(range_store.get(6), Some(&6));
+            assert_eq!(range_store.len(), 2);
+        }
+
+        #[test]
         pub fn save_test() {
             let range_store = RangeDataStorage::new(None);
             let mut range_store = range_store.unwrap();

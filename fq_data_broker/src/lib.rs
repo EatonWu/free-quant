@@ -230,12 +230,15 @@ impl DataBroker {
         Ok(bar_size_map)
     }
 
+    /// Given a ticker, bar size, start date, and end date, retrieves the data from ibapi and saves it to disk.
     fn get_data_and_save(&mut self, ticker: &String, timeframe: &HashedBarSize, start_date: OffsetDateTime, end_date: OffsetDateTime) -> Result<RangeDataStorage<i64, Vec<IBApiBar>>, Error> {
+        println!("In get_data_and_save");
         println!("Getting data for ticker: {} and timeframe: {:?}", ticker, timeframe);
         let contract = ibapi::contracts::Contract::stock(ticker.as_str());
         let data = self.ibapi_handler.get_historical_data(&contract, timeframe.to_bar_size(), start_date, end_date)?;
         let path = Path::new(&self.storage_directory).join(ticker).join(timeframe.to_location());
-        let mut range_data_storage = RangeDataStorage::new(None)?;
+        let path_str = Self::convert_osstr_to_string(Some(path.as_os_str()))?;
+        let mut range_data_storage = RangeDataStorage::new(Some(path_str))?;
         let vec_data = Vec::from(data);
         range_data_storage.insert(start_date.unix_timestamp(), end_date.unix_timestamp(), vec_data);
         let str_path = Self::convert_osstr_to_string(Some(path.as_os_str()))?;
@@ -263,6 +266,7 @@ impl DataBroker {
     ///
     /// TODO: THIS FUNCTION SHOULD ONLY BE ALLOWED TO FAIL IF WE EXHAUST ALL POSSIBLE DATA SOURCES
     pub fn retrieve_data(&mut self, ticker: String, timeframe: HashedBarSize, start_date: OffsetDateTime, end_date: OffsetDateTime) -> Result<Vec<IBApiBar>, Error> {
+        println!("start of retrieve_data");
         // step 1. check if the bar size map exists
         match self.ticker_map.get(&ticker) {
             // We do not have knowledge of this ticker, so we need request it using
@@ -292,6 +296,7 @@ impl DataBroker {
                 println!("Data does not exist in bar size map");
                 let data = self.get_data_and_save(&ticker, &timeframe, start_date, end_date)?;
                 owned_bar_size_map.insert(timeframe, Some(data));
+                println!("Data inserted into bar size map");
             },
             Some(None) => {
                 println!("Data partially realized");
@@ -310,26 +315,27 @@ impl DataBroker {
         };
 
         let mut owned_data_store = data_store.clone();
+        println!("cloned data store size: {}", owned_data_store.len());
         // step 3. check if the data exists in the range data storage
         if let Some(value) = owned_data_store.get(start_date.unix_timestamp()) {
             println!("Data exists in range data storage");
-            return Ok(value.clone());
+            // before returning, we need to save the data store into the bar map, and the bar map into the ticker map
+            let cloned_val = value.clone();
+            owned_bar_size_map.insert(timeframe, Some(owned_data_store));
+            self.ticker_map.insert(ticker.clone(), Some(owned_bar_size_map));
+            return Ok(cloned_val);
         }
         else {
             println!("Data does not exist in range data storage");
         }
 
-        // step 4. data not in range data storage, need to retrieve from ibapi
-        let contract = ibapi::contracts::Contract::stock(ticker.as_str());
-        let data = self.ibapi_handler.get_historical_data(&contract, timeframe.to_bar_size(), start_date, end_date)?;
-        owned_data_store.insert(start_date.unix_timestamp(), end_date.unix_timestamp(), Vec::from(data));
-        let result = owned_data_store.get(start_date.unix_timestamp());
-        owned_bar_size_map.insert(timeframe, Some(owned_data_store.clone()));
-        self.ticker_map.insert(ticker.clone(), Some(owned_bar_size_map.clone()));
-        match result {
-            Some(value) => Ok(value.clone()),
-            None => bail!("Could not retrieve data for ticker: {} and timeframe: {:?}", ticker, timeframe)
-        }
+        // step 4. if the data does not exist in the range data storage, we need to retrieve it from ibapi
+        let data = self.get_data_and_save(&ticker, &timeframe, start_date, end_date)?;
+        owned_data_store = data.clone();
+        let cloned_val = data.get(start_date.unix_timestamp()).unwrap().clone();
+        owned_bar_size_map.insert(timeframe, Some(owned_data_store));
+        self.ticker_map.insert(ticker.clone(), Some(owned_bar_size_map));
+        Ok(cloned_val)
     }
 
     // TODO
@@ -349,5 +355,21 @@ impl DataBroker {
 
     pub fn get_num_tickers(&self) -> usize {
         self.ticker_map.len()
+    }
+
+    pub fn get_num_entries(&self, ticker:String, timeframe: HashedBarSize) -> usize {
+        let bar_size_map = self.ticker_map.get(&ticker);
+        let bar_size_map = match bar_size_map {
+            Some(Some(bar_map)) => bar_map,
+            _ => return 0
+        };
+
+        let data_store = bar_size_map.get(&timeframe);
+        let data_store = match data_store {
+            Some(Some(data)) => data,
+            _ => return 0
+        };
+
+        data_store.len()
     }
 }

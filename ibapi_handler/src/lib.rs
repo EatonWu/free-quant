@@ -12,14 +12,48 @@ use time::OffsetDateTime;
 // Hopefully this doesn't cause any issues
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct IBApiBar {
-    date: i64,
+    pub date: i64,
     open: OrderedFloat<f64>,
     high: OrderedFloat<f64>,
     low: OrderedFloat<f64>,
-    close: OrderedFloat<f64>,
+    pub close: OrderedFloat<f64>,
     volume: OrderedFloat<f64>,
     count: i32,
     wap: OrderedFloat<f64>,
+}
+
+impl IBApiBar {
+    pub fn date(&self) -> i64 {
+        self.date.clone()
+    }
+
+    pub fn open(&self) -> OrderedFloat<f64> {
+        self.open.clone()
+    }
+
+    pub fn high(&self) -> OrderedFloat<f64> {
+        self.high.clone()
+    }
+
+    pub fn low(&self) -> OrderedFloat<f64> {
+        self.low.clone()
+    }
+
+    pub fn close(&self) -> OrderedFloat<f64> {
+        self.close.clone()
+    }
+
+    pub fn volume(&self) -> OrderedFloat<f64> {
+        self.volume.clone()
+    }
+
+    pub fn count(&self) -> i32 {
+        self.count.clone()
+    }
+
+    pub fn wap(&self) -> OrderedFloat<f64> {
+        self.wap.clone()
+    }
 }
 
 pub struct IbapiHandler {
@@ -47,6 +81,7 @@ impl IbapiHandler {
             WhatToShow::Trades,
             true
         )?;
+
         let bars = convert_bar_vec_to_wrapper(data.bars);
         Ok(bars)
     }
@@ -66,28 +101,37 @@ pub fn connect_to_tws() -> Result<Client, Error> {
     }
 }
 
+fn clamp_duration(seconds: i32) -> Duration {
+    if seconds > 86400 {
+        Duration::days(seconds / 86400)
+    } else {
+        Duration::seconds(seconds)
+    }
+}
+
 /// takes a time duration and converts it into a ibapi duration
 pub fn convert_durations(duration: time::Duration, bar_size: BarSize) -> Duration{
 
     let seconds = duration.whole_seconds() as i32;
     println!("Seconds: {:?}", seconds);
+
     return match bar_size {
-        BarSize::Sec => Duration::seconds(seconds),
-        BarSize::Sec5 => Duration::seconds(seconds),
-        BarSize::Sec15 => Duration::seconds(seconds),
-        BarSize::Sec30 => Duration::seconds(seconds),
-        BarSize::Min => Duration::seconds(seconds),
-        BarSize::Min2 => Duration::seconds(seconds),
-        BarSize::Min3 => Duration::seconds(seconds),
-        BarSize::Min5 => Duration::seconds(seconds),
-        BarSize::Min15 => Duration::seconds(seconds),
-        BarSize::Min20 => Duration::seconds(seconds),
-        BarSize::Min30 => Duration::seconds(seconds),
-        BarSize::Hour => Duration::seconds(seconds),
-        BarSize::Hour2 => Duration::seconds(seconds),
-        BarSize::Hour3 => Duration::seconds(seconds),
-        BarSize::Hour4 => Duration::seconds(seconds),
-        BarSize::Hour8 => Duration::seconds(seconds),
+        BarSize::Sec => clamp_duration(seconds),
+        BarSize::Sec5 => clamp_duration(seconds),
+        BarSize::Sec15 => clamp_duration(seconds),
+        BarSize::Sec30 => clamp_duration(seconds),
+        BarSize::Min => clamp_duration(seconds),
+        BarSize::Min2 => clamp_duration(seconds),
+        BarSize::Min3 => clamp_duration(seconds),
+        BarSize::Min5 => clamp_duration(seconds),
+        BarSize::Min15 => clamp_duration(seconds),
+        BarSize::Min20 => clamp_duration(seconds),
+        BarSize::Min30 => clamp_duration(seconds),
+        BarSize::Hour => clamp_duration(seconds),
+        BarSize::Hour2 => clamp_duration(seconds),
+        BarSize::Hour3 => clamp_duration(seconds),
+        BarSize::Hour4 => clamp_duration(seconds),
+        BarSize::Hour8 => clamp_duration(seconds),
         BarSize::Day => {
             let days = seconds / 86400;
             if days > 365 {

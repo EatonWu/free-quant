@@ -59,6 +59,8 @@ pub mod range_data_storage {
 
 
         pub fn save(&mut self, location: String) -> Result<(), Error>{
+            // print how many entries there are
+            println!("Entries: {}", self.range_map.len());
             // create all parent directories
             let path = Path::new(&location);
             if !path.exists() {
@@ -106,6 +108,16 @@ pub mod range_data_storage {
 
         pub fn get(&self, key: K) -> Option<&V> {
             self.range_map.get(&key)
+        }
+
+        pub fn len(&self) -> usize {
+            self.range_map.len()
+        }
+
+        pub fn add_from(&mut self, other: &RangeDataStorage<K, V>) {
+            for (range, value) in other.range_map.iter() {
+                self.range_map.insert(range.clone(), value.clone());
+            }
         }
     }
 
