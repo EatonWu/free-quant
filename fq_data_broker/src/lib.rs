@@ -135,6 +135,12 @@ pub struct DataBroker{
     ibapi_handler: IbapiHandler,
 }
 
+// TODO: validate that Databroker is indeed send and sync;
+// TODO: this class involves concurrent writes and reads to the file system.
+
+unsafe impl Send for DataBroker {}
+unsafe impl Sync for DataBroker {}
+
 /// lazily maps available tickers in storage directory to bar sizes.
 /// initially the bar sizes point to None until the data is requested,
 /// after which the data is retrieved from disk.
@@ -336,6 +342,13 @@ impl DataBroker {
         owned_bar_size_map.insert(timeframe, Some(owned_data_store));
         self.ticker_map.insert(ticker.clone(), Some(owned_bar_size_map));
         Ok(cloned_val)
+    }
+
+    // calls retrieve_data, but returns the JSON string instead of the data
+    pub fn retrieve_data_string(&mut self, ticker: String, timeframe: HashedBarSize, start_date: OffsetDateTime, end_date: OffsetDateTime) -> Result<String, Error> {
+        let data = self.retrieve_data(ticker, timeframe, start_date, end_date)?;
+        let data = serde_json::to_string(&data)?;
+        Ok(data)
     }
 
     // TODO

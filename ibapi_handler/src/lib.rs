@@ -62,7 +62,7 @@ pub struct IbapiHandler {
 
 impl IbapiHandler {
     pub fn new() -> Result<IbapiHandler, Error> {
-        let client = connect_to_tws()?;
+        let client = connect_to_tws(None)?;
         Ok(IbapiHandler {
             client,
         })
@@ -87,8 +87,14 @@ impl IbapiHandler {
     }
 }
 
-pub fn connect_to_tws() -> Result<Client, Error> {
-    let client = Client::connect("127.0.0.1:7497", 100);
+pub fn connect_to_tws(address: Option<String>) -> Result<Client, Error> {
+    let client;
+    if address.is_none() {
+        client = Client::connect("127.0.0.1:4000", 1);
+    }
+    else {
+        client = Client::connect(&*address.unwrap(), 1);
+    }
     return match client {
         Ok(c) => {
             println!("Connected to TWS");
